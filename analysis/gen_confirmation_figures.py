@@ -2,12 +2,13 @@
 """Render answer composition and confirmation diagnostics from audited summaries."""
 import argparse
 from pathlib import Path
+from result_paths import result_file
 import numpy as np
 from gen_model_controls import load,readcsv,style,clean,point,save,BLUE,ORANGE,GREEN,GRAY
 import matplotlib.pyplot as plt
 
 def provenance(root,out,zh):
-    rows=readcsv(root/'答案来源分析/answer_provenance_summary.csv')
+    rows=readcsv(result_file(root, '答案来源分析', 'answer_provenance_summary.csv'))
     rows=[r for r in rows if r['matrix']=='semantic']
     rows=sorted(rows,key=lambda r:(['bm25','racps','e5_rank'].index(r['selector']),r['condition']!='original'))
     fig,axs=plt.subplots(2,2,figsize=(8.0,6.0));fig.subplots_adjust(left=.14,right=.98,bottom=.11,top=.94,wspace=.55,hspace=.65)
@@ -31,7 +32,7 @@ def provenance(root,out,zh):
     c.tick_params(length=0);c.set_title('c  问题宏平均 / %' if zh else 'c  Question-macro scores / %',loc='left',weight='bold',pad=10)
     for i in range(6):
         for j in range(4):c.text(j,i,f'{vals[i,j]:.1f}',ha='center',va='center',color='white' if vals[i,j]>55 else '#25313A',fontsize=8)
-    effects=load(root/'答案来源分析/answer_filter_effects.json')
+    effects=load(result_file(root, '答案来源分析', 'answer_filter_effects.json'))
     for i,r in enumerate(rows):
         e=next(e for e in effects if all(e[k]==r[k] for k in ['matrix','selector','condition']))
         point(d,e,i,GRAY if r['condition']=='original' else GREEN)
@@ -41,8 +42,8 @@ def provenance(root,out,zh):
     save(fig,out,'answer_provenance',zh)
 
 def confirmation(root,out,zh):
-    rows=readcsv(root/'独立确认分析/condition_metrics.csv');effects=load(root/'独立确认分析/paired_effects.json')
-    summary=load(root/'机制核验/mechanism_summary.json');case=load(root/'机制核验/mechanism_cases.json')[0];ev=case['event']
+    rows=readcsv(result_file(root, '独立确认分析', 'condition_metrics.csv'));effects=load(result_file(root, '独立确认分析', 'paired_effects.json'))
+    summary=load(result_file(root, '机制核验', 'mechanism_summary.json'));case=load(result_file(root, '机制核验', 'mechanism_cases.json'))[0];ev=case['event']
     fig=plt.figure(figsize=(8,5.7));gs=fig.add_gridspec(2,2,left=.12,right=.98,bottom=.1,top=.95,wspace=.5,hspace=.6)
     a=fig.add_subplot(gs[0,0]);b=fig.add_subplot(gs[0,1]);c=fig.add_subplot(gs[1,:])
     for sel,col,lab in [('full',BLUE,'RACPS'),('no_cost',ORANGE,'无成本项' if zh else 'No cost')]:

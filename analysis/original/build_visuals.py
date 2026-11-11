@@ -155,7 +155,7 @@ for lang in os.environ.get('KG_FIGURE_LANGUAGES', 'en').split(','):
   for i,(c,v) in enumerate(zip(cs,vals)):
    ax.plot([0,v],[i,i],color=COL[c],alpha=.28,lw=4,solid_capstyle='round');ax.plot(v,i,'o',color=COL[c],ms=4.5);ax.text(v+.015,i,f'{v:.4f}',fontsize=7.2,va='center',color=COL[c])
   rowaxis(ax,[name(c) for c in cs] if j==0 else ['']*5);ax.set_xlim(0,.49);ax.set_xticks([0,.2,.4]);ax.set_ylim(4.55,-.65);ax.set_xlabel('F1');clean(ax,'x')
-  title(ax,chr(97+j),['All · n = 1,077','1 relation · n = 671','2+ relations · n = 406'][j],['总体 · n = 1,077','1条关系 · n = 671','2+条关系 · n = 406'][j])
+  title(ax,chr(97+j),['All · n = 1,077','Max. chain = 1 · n = 671','Max. chain ≥ 2 · n = 406'][j],['总体 · n = 1,077','最大链长 1 · n = 671','最大链长 ≥2 · n = 406'][j])
  for y,c in enumerate(['bm25','relation_density','e5_rank']):
   r=next(r for r in A['supplement_primary_pairs'] if r['baseline']==c);x,lo,hi=[100*r[k] for k in ['difference','ci_low','ci_high']];point_ci(axc,x,lo,hi,y,COL[c]);axc.text(19.7,y,f'{x:+.2f}  [{lo:+.2f}, {hi:+.2f}]',ha='right',va='center',fontsize=7.7,color=COL[c])
  rowaxis(axc,[h('vs ','对')+name(c) for c in ['bm25','relation_density','e5_rank']]);axc.axvline(0,color=MUTED,lw=.8);axc.set_xlim(-14,20.4);axc.set_xticks([-10,-5,0,5,10]);axc.set_ylim(2.55,-.65);clean(axc,'x');axc.set_xlabel(h('RACPS difference (F1 points; 95% paired CI)','RACPS差值（F1百分点；95%配对区间）'));title(axc,'d','Overall paired contrasts · n = 1,077','总体配对对比 · n = 1,077')

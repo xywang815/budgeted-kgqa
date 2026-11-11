@@ -13,7 +13,8 @@ def main():
     manifest=json.loads((a.input/'sample_manifest.json').read_text());sample={r['id']:r for r in manifest['sample']};assert len(sample)==300
     assert not set(sample)&set(manifest['excluded_ids'])
     f=a.input/'records.jsonl.gz'
-    with gzip.open(f,'rt') as h:rows=[json.loads(x) for x in h]
+    if not f.exists(): f=f.with_suffix('')
+    with (gzip.open(f,'rt') if f.suffix=='.gz' else f.open()) as h:rows=[json.loads(x) for x in h]
     assert len(rows)==1200;groups=defaultdict(dict)
     for r in rows:
         assert r['id'] in sample and r['prediction']==parse_names(r['raw_response'])

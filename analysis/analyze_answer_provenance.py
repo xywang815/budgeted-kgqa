@@ -19,7 +19,9 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--source',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);a=ap.parse_args()
     a.output.mkdir(parents=True,exist_ok=True);per=[];source_hashes={}
     for matrix,rel in [('reader','reader_formal/records.jsonl.gz'),('semantic','semantic_formal/reader_records.jsonl.gz')]:
-        f=a.source/rel;source_hashes[rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+        f=a.source/rel
+        if not f.exists(): f=f.with_suffix('')
+        source_hashes[str(f.relative_to(a.source))]=hashlib.sha256(f.read_bytes()).hexdigest()
         for r in records(f):
             if r['dataset']!='MetaQA' or r.get('selection_budget',256)!=256:continue
             if matrix=='reader' and r['condition'] not in ('original','no_ngram_block','no_rep_constraints','labeled_names_no_constraints','labeled_codes_no_constraints'):continue

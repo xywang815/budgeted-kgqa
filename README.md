@@ -34,7 +34,7 @@ The official WebQSP release is available from the Microsoft page above. Its arch
 
 ### Download and connect the required files
 
-Perform large downloads on the inference server. The MetaQA repository links to the provider's Google Drive folder; cloning the repository alone does not download the dataset. Obtain `kb.txt` and `1-hop/vanilla`, `2-hop/vanilla`, `3-hop/vanilla` with `qa_dev.txt` and `qa_test.txt`. Audio, NTM, and MetaQA training files are not needed by this study. The post-review semantic controls also use the official WebQSP training file and training neighborhoods.
+Perform large downloads on the inference server. The MetaQA repository links to the provider's Google Drive folder; cloning the repository alone does not download the dataset. Obtain `kb.txt` and `1-hop/vanilla`, `2-hop/vanilla`, `3-hop/vanilla` with `qa_dev.txt` and `qa_test.txt`. Audio, NTM, and MetaQA training files are not needed by this study. The follow-up semantic controls also use the official WebQSP training file and training neighborhoods.
 
 The WebQSP release is `WebQSP.zip` from the Microsoft Download button. Extract it and locate `WebQSP/data/WebQSP.test.json` and `WebQSP/data/WebQSP.train.json`. UniK-QA's large archive supplies `data/freebase_2hop/stagg.neighborhoods/`; preserve its `WebQTest-*.nxhd` and `WebQTrn-*.nxhd` files. The original neighborhood extraction is required; another Freebase graph is not interchangeable.
 
@@ -227,7 +227,7 @@ For exact independent comparison against separately retained original statistics
 
 ### Figures and outputs
 
-The manuscript uses `study_framework`, `budget_tradeoffs`, `components`, `shared_pool`, `reader_profile`, and `revision_controls`; the additional two designs remain available for analysis. The supplement uses `component_stages`. English is the default. For Chinese figure export, set `KG_FIGURE_LANGUAGES=en,zh` and `KG_CJK_FONT` to an installed CJK font file before the figure stage.
+The current standalone manuscript uses `study_framework`, `budget_tradeoffs`, `components`, `shared_pool`, and `revision_controls`, together with four follow-up figures generated below. Other figure and table generators remain available for optional local analysis. English is the default. For Chinese figure export, set `KG_FIGURE_LANGUAGES=en,zh` and `KG_CJK_FONT` to an installed CJK font file before the figure stage.
 
 Statistical inputs and outputs, source datasets, PDFs, PNGs, and local logs remain under ignored workspace paths. Only source code and documentation are published.
 
@@ -327,7 +327,7 @@ checks. E5 evaluates rank and four density rules: max or min-max normalization,
 with cost exponents 0.5 or 1. The chosen rule maximizes development endpoint
 macro F1; exact ties follow rank, max/0.5, max/1, min-max/0.5, min-max/1. The
 choice is written before test scoring. It is not selected by test reader F1.
-The controls are post-review exploratory work, since the original test results
+The controls are exploratory follow-up work, since the original test results
 were already known.
 
 MetaQA E5-rank uses all original exact-hop candidates (cap100,000), with no added
@@ -339,7 +339,7 @@ pools remain in the evaluation. After E5 scoring, the reader stage generates
 WebQSP E5-rank, E5-density, and the development-chosen rule. Identical selected
 prompts are cached within that run. Batched timing is not per-request latency.
 
-A second-wave cost-by-decoding control follows the initial reader finding. It
+A cost-by-decoding control follows the initial reader finding. It
 regenerates all four cells (full/no-cost selection × original/no-repetition-constraints)
 on the same 900 MetaQA B256 questions: 3,600 condition records, with unchanged
 paths, prompts, and 96-token generation caps. The thin driver selects these
@@ -367,7 +367,7 @@ and score/cost/path-length diagnostics. The analyzers accept plain JSONL or
 `.jsonl.gz` records. Keep the semantic `arrays/` directory for independent
 candidate-score checks. None of these generated records belong in GitHub.
 
-Generate the new data-driven figures and supplementary tables from the verified
+Generate the data-driven figures and optional detailed tables from the verified
 analysis directories:
 
 ```sh
@@ -384,37 +384,47 @@ contains none of their PDF, PNG, or LaTeX output artifacts.
 
 ## New-question confirmation and token-level audit
 
-The follow-up confirmation freezes four cells on 300 additional MetaQA questions,
-100 per hop. It excludes IDs and normalized question strings in all locally
-archived `results/*.json` and `revision*/results/*.json` files. Reproducing the
-exact paper sample requires those original outputs or the exclusion list and
-sample manifest supplied in the separate review archive. Running with an
-incomplete archive can produce a different sample; it is not the paper's exact
-confirmation. The public repository contains no experimental outputs.
+The confirmation crosses full/no-cost selection with original/removed repetition
+constraints on 300 additional MetaQA questions, 100 per hop. The paper excludes
+all prior question IDs and normalized question strings found in the historical
+outputs and preprocessing repair log. No experimental outputs are stored here.
 
-The final paper has 32,139 follow-up condition records (18,708 reader, 8,631
-semantic, 3,600 cost/decoder, and 1,200 confirmation). These outputs are supplied
-with the paper as `Supplementary_Records_and_Reanalysis.zip`, not in GitHub.
-Its `复核数据与代码/round2/publication_snapshot.json` pins the code version.
-
-**Exact replay of the paper's 300 questions.** Extract Supplementary Archive S2
-and set `REVIEW_ROUND2` to its `复核数据与代码/round2` directory. After the normal
-data/model/workspace setup above, run:
+**Recreate the exact 300-question sample from public data.** After the normal
+workspace setup and MetaQA preprocessing, run this CPU-only helper:
 
 ```sh
-python scripts/prepare_confirmation_replay.py --review-dir "$REVIEW_ROUND2" --project work/reproduction
-.venv/bin/python src/run_independent_confirmation.py --project work/reproduction --plan work/reproduction/confirmation_plan.json --output work/reproduction/review_round2/confirmation
+.venv-analysis/bin/python scripts/prepare_confirmation_from_data.py --project work/reproduction --output work/reproduction/review_round2/confirmation
+.venv-inference/bin/python src/run_independent_confirmation.py --project work/reproduction --plan work/reproduction/review_round2/confirmation/plan.json --output work/reproduction/review_round2/confirmation
 ```
 
-The preparation script checks the complete original plan hash, the sample IDs,
-all 3,521 exclusion IDs and normalized strings in the post-run ledger, and zero
-sample overlap. It copies only that exact plan and sample manifest into a clean
-workspace. The runner then reuses the manifest, rather than requiring the
-historical source files or resampling. It generates paths and model outputs
-again. It will not overwrite a different existing plan or manifest. The ledger
-was reconstructed after the run from the 27 unchanged, hash-verified sources;
-it is not presented as a separately preregistered artifact. No model or dataset
-is downloaded by this preparation command.
+The helper reconstructs exclusions without historical predictions: test samples
+of 300 per hop at seeds 42, 20260818, 20260819, and 20260820; development samples
+of 20 per hop at seed 42 and one per hop at seed 7; and every preprocessing label
+repair. Each historical draw uses `random.Random(seed + hop * 1000).sample` on
+original line order. Smaller pilot draws are subsets of these draws. This
+reconstructs all 3,521 exclusion IDs and their normalized question strings.
+Remaining test questions are ordered by SHA-256 of `20261111:question_id`,
+deduplicated by case-folded question text with brackets removed and whitespace
+collapsed, then the first 100 per hop are selected. Fingerprints of both ordered
+ID lists must match the historical sample before a manifest is written. The
+helper refuses to overwrite a nonempty output directory. It needs no tokenizer,
+model, result archive, GPU, or network access.
+
+The generated plan and manifest are reproducible reconstructions, not the
+original archived files or a new preregistration. The original locally frozen
+protocol and saved question-level records are available from the corresponding
+author on reasonable request. Readers can either regenerate predictions using
+the linked public data and pinned models or reanalyze those records; the two
+operations answer different reproducibility questions. The recorded follow-up
+experiments comprise 18,708 reader, 8,631 semantic, 3,600 cost/decoder, and 1,200
+confirmation condition records. None is required as a manuscript attachment.
+
+For an author-supplied historical archive, the optional
+`scripts/prepare_confirmation_replay.py` validates the original plan, manifest,
+and exclusion ledger. Its `--review-dir` points to the directory containing
+`confirmation_plan.json`, `exclusion_ledger.json`, and
+`独立确认/sample_manifest.json`; this legacy route is not needed for the commands
+above.
 
 **New-sample extension.** To scan your own complete historical outputs and draw
 a new sample, use a different clean output directory. This is distinct from
@@ -428,10 +438,10 @@ p = Path("work/reproduction/extension_plan.json")
 p.parent.mkdir(parents=True, exist_ok=True)
 p.write_text(json.dumps({"n_per_hop": 100, "seed": 20261111}, indent=2))
 PYPLAN
-.venv/bin/python src/run_independent_confirmation.py --project work/reproduction --plan work/reproduction/extension_plan.json --output work/reproduction/review_round2/extension
+.venv-inference/bin/python src/run_independent_confirmation.py --project work/reproduction --plan work/reproduction/extension_plan.json --output work/reproduction/review_round2/extension
 ```
 
-The full scientific freeze in the review archive additionally specifies the
+The original locally archived scientific freeze additionally specifies the
 primary estimand, decoder controls, exclusions, and reporting rules. The runner
 uses the previously prepared MetaQA splits, graph, and Qwen model. Copy the
 current `src` directory into `work/reproduction/src` before running if that
@@ -443,26 +453,26 @@ or datasets. The model snapshot, exclusion inputs, paths, prompts, and source
 hashes are saved locally before inference. GPU lock and occupancy checks protect
 other runs; identical current-run prompts can share generated responses.
 
-Compress completed records without deleting the original, then reanalyze:
+Reanalyze completed records (plain JSONL and gzip-compressed JSONL are both accepted):
 
 ```sh
-python - <<'PYZIP'
-import gzip
-from pathlib import Path
-p = Path("work/reproduction/review_round2/confirmation/records.jsonl")
-p.with_suffix(".jsonl.gz").write_bytes(gzip.compress(p.read_bytes(), mtime=0))
-PYZIP
 .venv-analysis/bin/python analysis/analyze_independent_confirmation.py --input work/reproduction/review_round2/confirmation --output work/reproduction/review_round2/confirmation_analysis
 .venv-analysis/bin/python analysis/analyze_answer_provenance.py --source work/reproduction/review_followup --output work/reproduction/review_round2/provenance
-.venv/bin/python analysis/trace_copy_blocking.py --records work/reproduction/review_followup/reader_formal/records.jsonl --model-dir work/reproduction/models/Qwen3-8B-AWQ --output work/reproduction/review_round2/mechanism
+.venv-inference/bin/python analysis/trace_copy_blocking.py --records work/reproduction/review_followup/reader_formal/records.jsonl --model-dir work/reproduction/models/Qwen3-8B-AWQ --output work/reproduction/review_round2/mechanism
+.venv-analysis/bin/python analysis/gen_confirmation_figures.py --source work/reproduction/review_round2 --output work/reproduction/manuscript/figures
+.venv-analysis/bin/python analysis/export_confirmation_tables.py --source work/reproduction/review_round2 --output work/reproduction/manuscript/generated_confirmation
 ```
 
 The token audit loads the tokenizer and installed Transformers processor, not
-model weights. It verifies forbidden tokens on saved trajectories and separates
-shared-prefix cases from later counterfactual replay events. Endpoint membership
-does not identify the causal knowledge source of an answer. Figure/table export
-scripts `gen_confirmation_figures.py` and `export_confirmation_tables.py` use the
-review archive's named round-two subdirectories, documented in its README.
+model weights. For compressed reader records, pass the actual `.jsonl.gz` path
+to `--records`. It distinguishes shared-prefix cases from later counterfactual
+replay events. Endpoint membership does not identify the causal knowledge source
+of an answer. Figure/table exports read the `confirmation_analysis`, `provenance`,
+and `mechanism` directories created by these commands; the legacy local Chinese
+directory names remain accepted. Tables are optional analysis outputs, not
+mandatory submission supplements. Model hashes and versions, prompts, and the
+complete nine-relation verbalization map are defined in the source files used
+by these commands.
 
 ## Source and licensing
 
